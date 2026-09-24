@@ -1,0 +1,30 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Demo_Fuel2026!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - fuel-sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Demo_Fuel2026!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  web:
+    build: .
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=FuelTicketsDb;User Id=sa;Password=Demo_Fuel2026!;TrustServerCertificate=True
+      Jwt__Key: DEMO-JWT-KEY-CAMBIAR-ANTES-DE-PRODUCCION-2026
+      Qr__SigningKey: DEMO-QR-KEY-CAMBIAR-ANTES-DE-PRODUCCION-2026
+    ports:
+      - "8080:8080"
+volumes:
+  fuel-sql-data:

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "FuelTickets": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://0.0.0.0:51398;http://0.0.0.0:51399"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#123a66"><title>FuelControl</title>
+  <style>[hidden]{display:none!important}</style>
+  <link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <section id="login" class="login-shell">
+    <form id="loginForm" class="login-card">
+      <div class="brand-mark">FC</div><h1>FuelControl</h1><p>Tickets digitales e inventario de combustible</p>
+      <label>Usuario<input name="username" autocomplete="username" value="admin" required></label>
+      <label>Contraseña<input name="password" type="password" autocomplete="current-password" value="Admin123!" required></label>
+      <button>Iniciar sesión</button><small>Acceso autorizado al sistema</small><div id="loginError" class="error"></div>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <aside><div class="brand"><span>FC</span><div><b>FuelControl</b><small>Gestión integral</small></div></div>
+      <nav>
+        <button data-view="dashboard" class="active">Resumen</button><button data-view="requests">Solicitudes</button>
+        <button data-view="tickets">Tickets QR</button><button data-view="scanner" data-roles="Administrator Supervisor Dispatcher">Despacho móvil</button>
+        <button data-view="inventory" data-roles="Administrator Supervisor Auditor Viewer">Inventario</button><button data-view="catalogs">Catálogos</button>
+        <button data-view="reports" data-roles="Administrator Supervisor Auditor Viewer">Reportes</button><button data-view="audit" data-roles="Administrator Supervisor Auditor Viewer">Auditoría</button>
+        <button data-view="settings" data-roles="Administrator">Configuración</button>
+      </nav>
+      <div class="user"><span id="who"></span><button id="logout" class="link">Cerrar sesión</button></div>
+    </aside>
+    <main>
+      <header><button id="menu">☰</button><div><h2 id="pageTitle">Resumen ejecutivo</h2><p id="today"></p></div><span id="role" class="pill"></span></header>
+      <div id="notice"></div>
+
+      <section id="view-dashboard" class="view">
+        <div id="metrics" class="metrics"></div>
+        <div class="grid2"><article><h3>Consumo mensual por departamento</h3><div id="bars"></div></article><article><h3>Despachos recientes</h3><div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Vehículo</th><th>Galones</th><th>Fecha</th></tr></thead><tbody id="recent"></tbody></table></div></article></div>
+      </section>
+
+      <section id="view-requests" class="view" hidden>
+        <div class="toolbar"><div><h3>Solicitudes de combustible</h3><p>Cree una solicitud y emita su ticket al aprobarla.</p></div><button data-modal="requestModal">Nueva solicitud</button></div>
+        <article class="table-wrap"><table><thead><tr><th>#</th><th>Empleado</th><th>Vehículo</th><th>Galones</th><th>Vence</th><th>Estado</th><th></th></tr></thead><tbody id="requestRows"></tbody></table></article>
+      </section>
+
+      <section id="view-tickets" class="view" hidden>
+        <div class="toolbar"><div><h3>Tickets digitales</h3><p>QR único, firmado, no editable y de un solo uso.</p></div></div>
+        <article class="table-wrap"><table><thead><tr><th>Secuencia</th><th>Empleado</th><th>Vehículo</th><th>Cantidad</th><th>Estado</th><th>Vencimiento</th><th>Documento</th></tr></thead><tbody id="ticketRows"></tbody></table></article>
+      </section>
+
+      <section id="view-scanner" class="view" hidden>
+        <div class="scanner-grid"><article><h3>Escanear ticket QR</h3><video id="video" playsinline></video><div class="scan-line"></div><div class="actions"><button id="startScan">Abrir cámara</button><button id="stopScan" class="secondary">Detener</button></div><label>También puede pegar el contenido del QR<textarea id="manualQr" rows="3"></textarea></label><button id="validateQr">Validar ticket</button></article>
+        <article><h3>Resultado de validación</h3><div id="validation" class="empty">Escanee un código para ver sus datos.</div><form id="dispatchForm" hidden><input type="hidden" name="qrPayload"><label>Tanque<select name="tankId" data-options="tanks" required></select></label><label>Galones servidos<input name="gallonsServed" type="number" step="0.01" min="0.01" required></label><label>Estación<input name="station" value="Estación principal" required></label><label>Observaciones<textarea name="notes"></textarea></label><button>Confirmar despacho</button></form></article></div>
+      </section>
+
+      <section id="view-inventory" class="view" hidden>
+        <div class="toolbar"><div><h3>Inventario en tiempo real</h3><p>Recepciones, ajustes, transferencias y mermas.</p></div><button data-modal="movementModal" data-roles="Administrator Supervisor">Registrar movimiento</button></div>
+        <div id="tankCards" class="metrics"></div><article class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tanque</th><th>Tipo</th><th>Cantidad</th><th>Balance</th><th>Referencia</th></tr></thead><tbody id="movementRows"></tbody></table></article>
+      </section>
+
+      <section id="view-catalogs" class="view" hidden>
+        <div class="toolbar"><div><h3>Catálogos maestros</h3><p>Usuarios, departamentos, empleados, vehículos y tanques.</p></div><div class="actions"><button data-modal="userModal" data-roles="Administrator">Usuario</button><button data-modal="employeeModal" data-roles="Administrator Supervisor">Empleado</button><button data-modal="vehicleModal" data-roles="Administrator Supervisor">Vehículo</button><button data-modal="departmentModal" data-roles="Administrator Supervisor">Departamento</button><button data-modal="tankModal" data-roles="Administrator Supervisor">Tanque</button></div></div>
+        <div class="grid2"><article><h3>Usuarios</h3><div id="users"></div></article><article><h3>Empleados</h3><div id="employees"></div></article><article><h3>Vehículos</h3><div id="vehicles"></div></article><article><h3>Departamentos</h3><div id="departments"></div></article></div>
+      </section>
+
+      <section id="view-reports" class="view" hidden>
+        <div class="toolbar"><div><h3>Reportes y cierre</h3><p>Consulte y exporte la información operativa.</p></div><div class="actions"><button id="csv" class="secondary">CSV</button><button id="pdf" class="secondary">PDF</button><button id="xlsx">Excel</button></div></div>
+        <article><form id="reportFilter" class="inline-form"><label>Desde<input name="from" type="date"></label><label>Hasta<input name="to" type="date"></label><label>Departamento<select name="departmentId" data-options="departments" data-allow-empty="Todos"></select></label><button>Filtrar</button></form><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Ticket</th><th>Empleado</th><th>Vehículo</th><th>Departamento</th><th>Galones</th></tr></thead><tbody id="reportRows"></tbody></table></div></article>
+        <article><h3>Cierre diario</h3><form id="closureForm" class="inline-form" data-roles="Administrator Supervisor"><label>Fecha<input name="businessDate" type="date" required></label><label>Existencia física final<input name="physicalClosingGallons" type="number" step="0.01" required></label><button>Generar cierre</button></form><div id="closures"></div></article>
+      </section>
+
+      <section id="view-audit" class="view" hidden><div class="toolbar"><div><h3>Trazabilidad y auditoría</h3><p>Registro de accesos, cambios, despachos y ajustes.</p></div></div><article class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>ID</th><th>IP</th></tr></thead><tbody id="auditRows"></tbody></table></article></section>
+
+      <section id="view-settings" class="view" hidden>
+        <div class="toolbar"><div><h3>Configuración institucional</h3><p>Personalice la identificación y reglas generales de FuelControl.</p></div></div>
+        <article><form id="settingsForm"><div class="grid2">
+          <label>Nombre de la institución<input name="InstitutionName" required></label>
+          <label>RNC o identificación<input name="InstitutionRnc"></label>
+          <label>Correo administrativo<input name="ContactEmail" type="email"></label>
+          <label>Prefijo de tickets<input name="TicketPrefix" maxlength="10" required></label>
+          <label>Vigencia predeterminada (horas)<input name="TicketValidityHours" type="number" min="1" max="720" required></label>
+        </div><button>Guardar configuración</button></form></article>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="requestModal"><form id="requestForm" method="dialog"><h3>Nueva solicitud</h3><label>Empleado<select name="employeeId" data-options="employees" required></select></label><label>Vehículo<select name="vehicleId" data-options="vehicles" required></select></label><label>Departamento<select name="departmentId" data-options="departments" required></select></label><label>Galones autorizados<input name="authorizedGallons" type="number" min="0.01" step="0.01" required></label><label>Combustible<select name="fuelType"><option>Gasolina</option><option>Gasoil</option></select></label><label>Vencimiento<input name="expiresAtUtc" type="datetime-local" required></label><label>Notas<textarea name="notes"></textarea></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Guardar</button></div></form></dialog>
+  <dialog id="movementModal"><form id="movementForm" method="dialog"><h3>Movimiento de inventario</h3><label>Tanque<select name="tankId" data-options="tanks" required></select></label><label>Tipo<select name="type"><option value="Receipt">Recepción</option><option value="PositiveAdjustment">Ajuste positivo</option><option value="NegativeAdjustment">Ajuste negativo</option><option value="TransferIn">Transferencia entrada</option><option value="TransferOut">Transferencia salida</option><option value="Shrinkage">Merma</option></select></label><label>Cantidad en galones<input name="quantityGallons" type="number" min="0.01" step="0.01" required></label><label>RNC suplidor<input name="supplierRnc"></label><label>Suplidor<input name="supplierName"></label><label>Factura<input name="invoiceNumber"></label><label>Notas<textarea name="notes"></textarea></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Registrar</button></div></form></dialog>
+  <dialog id="departmentModal"><form id="departmentForm" method="dialog"><h3>Nuevo departamento</h3><label>Nombre<input name="name" required></label><label>Código<input name="code" required></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Guardar</button></div></form></dialog>
+  <dialog id="userModal"><form id="userForm" method="dialog"><h3>Nuevo usuario</h3><label>Usuario<input name="username" required></label><label>Nombre completo<input name="fullName" required></label><label>Correo<input name="email" type="email" required></label><label>Rol<select name="role"><option>Administrator</option><option>Supervisor</option><option>Dispatcher</option><option>Auditor</option><option>Viewer</option></select></label><label>Contraseña<input name="password" type="password" minlength="8" required></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Guardar</button></div></form></dialog>
+  <dialog id="employeeModal"><form id="employeeForm" method="dialog"><h3>Nuevo empleado</h3><label>Código<input name="employeeCode" required></label><label>Nombre completo<input name="fullName" required></label><label>Cédula<input name="nationalId" required></label><label>Departamento<select name="departmentId" data-options="departments" required></select></label><label>Cargo<input name="position" required></label><label>Correo<input name="email" type="email"></label><label>Celular<input name="mobile"></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Guardar</button></div></form></dialog>
+  <dialog id="vehicleModal"><form id="vehicleForm" method="dialog"><h3>Nuevo vehículo</h3><label>Placa<input name="plate" required></label><label>Ficha interna<input name="internalCode" required></label><label>Marca<input name="make" required></label><label>Modelo<input name="model" required></label><label>Año<input name="year" type="number" required></label><label>Tipo<input name="type" required></label><label>Departamento<select name="departmentId" data-options="departments" required></select></label><label>Capacidad tanque (gal)<input name="tankCapacityGallons" type="number" step="0.01" required></label><label>Odómetro (km)<input name="odometerKm" type="number" step="0.01" required></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Guardar</button></div></form></dialog>
+  <dialog id="tankModal"><form id="tankForm" method="dialog"><h3>Nuevo tanque</h3><label>Nombre<input name="name" required></label><label>Combustible<select name="fuelType"><option>Gasolina</option><option>Gasoil</option></select></label><label>Capacidad (gal)<input name="capacityGallons" type="number" min="0.01" step="0.01" required></label><label>Existencia inicial<input name="currentGallons" type="number" min="0" step="0.01" required></label><label>Nivel crítico<input name="criticalLevelGallons" type="number" min="0" step="0.01" required></label><div class="actions"><button type="button" class="secondary close">Cancelar</button><button>Guardar</button></div></form></dialog>
+  <script src="/js/jsQR.js?v=1.4.0"></script>
+  <script src="/js/app.js?v=iphone"></script>
+</body></html>
